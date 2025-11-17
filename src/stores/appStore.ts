@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface AppState {
   // Theme
@@ -55,12 +55,18 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'metamaster360-storage',
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         darkMode: state.darkMode,
         completedModules: Array.from(state.completedModules),
         showHints: state.showHints,
         fontSize: state.fontSize,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state && Array.isArray((state as any).completedModules)) {
+          state.completedModules = new Set((state as any).completedModules)
+        }
+      },
     }
   )
 )
