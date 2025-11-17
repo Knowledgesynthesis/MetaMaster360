@@ -47,9 +47,6 @@ export function Home() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {modules.map((module) => {
             const isComplete = completedModules.has(module.id)
-            const hasPrerequisites = module.prerequisites && module.prerequisites.length > 0
-            const prerequisitesMet = !hasPrerequisites ||
-              module.prerequisites!.every((prereq) => completedModules.has(prereq))
 
             return (
               <Card
@@ -78,25 +75,15 @@ export function Home() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <CardDescription className="line-clamp-2">
+                  <CardDescription className="line-clamp-3">
                     {module.description}
                   </CardDescription>
-                  {hasPrerequisites && (
-                    <div className="text-xs text-muted-foreground">
-                      Prerequisites:{' '}
-                      {module.prerequisites!.map((prereqId) => {
-                        const prereq = modules.find((m) => m.id === prereqId)
-                        return prereq?.title
-                      }).join(', ')}
-                    </div>
-                  )}
                   <Link to={module.path}>
                     <Button
                       className="w-full"
                       variant={isComplete ? 'secondary' : 'default'}
-                      disabled={!prerequisitesMet}
                     >
-                      {isComplete ? 'Review' : 'Start Module'}
+                      {isComplete ? 'Review Module' : 'Start Learning'}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
