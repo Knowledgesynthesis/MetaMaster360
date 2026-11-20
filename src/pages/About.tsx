@@ -1,151 +1,81 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router'
+import { Download, Upload, RotateCcw } from 'lucide-react'
+import { useProgress, type Theme } from '@/store/progress'
+import { Button, Callout, Card, CardBody, Segmented } from '@/components/ui'
+import { downloadText } from '@/lib/utils'
 
-export function About() {
+export default function About() {
+  const theme = useProgress((s) => s.theme)
+  const setTheme = useProgress((s) => s.setTheme)
+  const reset = useProgress((s) => s.reset)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [msg, setMsg] = useState('')
+  const [confirm, setConfirm] = useState(false)
+  useEffect(() => { document.title = 'About & settings — MetaMaster360' }, [])
+
+  const exportProgress = () => {
+    const { theme, scores, missed, visited, lastModule, exams, capstone } = useProgress.getState()
+    downloadText(JSON.stringify({ app: 'metamaster360', version: 2, theme, scores, missed, visited, lastModule, exams, capstone }, null, 2), 'metamaster360-progress.json', 'application/json')
+  }
+  const importProgress = async (f: File) => {
+    try {
+      const data = JSON.parse(await f.text())
+      if (data.app !== 'metamaster360') throw new Error('Not a MetaMaster360 progress file.')
+      const { scores = {}, missed = {}, visited = {}, lastModule, exams = [], capstone = {} } = data
+      useProgress.setState({ scores, missed, visited, lastModule, exams, capstone })
+      setMsg('Progress imported.')
+    } catch (e) {
+      setMsg((e as Error).message)
+    }
+  }
+
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">About MetaMaster360</h1>
-        <p className="text-xl text-muted-foreground">
-          Your comprehensive platform for learning systematic review and meta-analysis
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-8">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">About & settings</h1>
+        <p className="text-muted">MetaMaster360 teaches the full systematic review and meta-analysis workflow through one running case, working tools and retrieval practice.</p>
+      </header>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Mission</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p>
-            MetaMaster360 is designed to teach clinicians, researchers, and students
-            everything they need to know to perform rigorous systematic reviews and
-            meta-analyses. From question formulation to manuscript preparation, we
-            provide a complete, interactive learning experience.
-          </p>
-          <p>
-            Our platform supports learners at all levels—from medical students to
-            faculty—with evidence-based, methodologically sound content aligned with
-            international standards.
-          </p>
-        </CardContent>
+        <CardBody className="space-y-4">
+          <h2 className="font-semibold">Settings</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-sm">Theme</span>
+            <Segmented value={theme} onChange={(t: Theme) => setTheme(t)} label="Theme" options={[{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-sm">Progress (stored only in this browser)</span>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={exportProgress}><Download className="h-4 w-4" />Export</Button>
+              <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4" />Import</Button>
+              <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={(e) => e.target.files?.[0] && importProgress(e.target.files[0])} />
+              {confirm ? (
+                <Button size="sm" variant="danger" onClick={() => { reset(); setConfirm(false); setMsg('Progress reset.') }}>Confirm reset</Button>
+              ) : (
+                <Button size="sm" variant="ghost" onClick={() => setConfirm(true)}><RotateCcw className="h-4 w-4" />Reset</Button>
+              )}
+            </div>
+          </div>
+          {msg && <p className="text-sm text-muted" role="status">{msg}</p>}
+        </CardBody>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Key Features</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
-            <li className="flex items-start">
-              <span className="mr-2">🎯</span>
-              <div>
-                <strong>Evidence-Based Content:</strong> Aligned with PRISMA 2020,
-                Cochrane Handbook, and GRADE guidelines
-              </div>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">🧮</span>
-              <div>
-                <strong>Interactive Tools:</strong> PICO builders, forest plots,
-                funnel plots, and meta-analysis calculators
-              </div>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">📚</span>
-              <div>
-                <strong>Synthetic Data:</strong> Safe, educationally-focused datasets
-                that never use real patient data
-              </div>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">📱</span>
-              <div>
-                <strong>Mobile-First Design:</strong> Learn on any device with
-                offline capability
-              </div>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">🌙</span>
-              <div>
-                <strong>Dark Mode:</strong> Comfortable learning in any lighting
-                condition
-              </div>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">♿</span>
-              <div>
-                <strong>Accessibility:</strong> WCAG 2.2 AA compliant for all learners
-              </div>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
+      <section className="lesson space-y-3 text-[0.95rem]">
+        <h2 className="text-xl font-semibold">How the content is kept accurate</h2>
+        <ul>
+          <li>Methods follow the Cochrane Handbook v6.5, Cochrane’s current RevMan random-effects methods, PRISMA 2020 and its extensions, RoB 2 / ROBINS-I V2 / ROB-ME, and the 2025 Core GRADE series — see <Link to="/references">Sources</Link>.</li>
+          <li>The statistics engine is unit-tested against published metafor results for the BCG vaccine dataset (REML τ² = 0.3132, pooled log RR = −0.7145, Q-profile CI for τ², HKSJ, prediction interval, Egger’s test) and against SciPy for every distribution function.</li>
+          <li>Every DOI is checked against Crossref; numerical claims from studies (e.g., single-reviewer screening missing 13% of studies) are checked against the original abstracts.</li>
+          <li>Content was last reviewed in November 2026. Draft tools (ROBINS-I V2) are labelled as such.</li>
+        </ul>
+        <h2 className="text-xl font-semibold">Privacy</h2>
+        <p>Everything runs in your browser. There is no account, tracking or upload; progress lives in local storage and can be exported. The app works offline once loaded.</p>
+        <h2 className="text-xl font-semibold">Use</h2>
+        <p>The running case uses synthetic studies. For a real review, use the tools here alongside the linked guidance documents and your team’s statistician or information specialist.</p>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Learning Path</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4">
-            The platform covers the complete systematic review workflow:
-          </p>
-          <ol className="space-y-2 list-decimal list-inside">
-            <li>Framing research questions with PICO/PEO</li>
-            <li>Protocol development and PROSPERO registration</li>
-            <li>Building comprehensive search strategies</li>
-            <li>Citation management and deduplication</li>
-            <li>Screening and PRISMA flow diagrams</li>
-            <li>Data extraction and table building</li>
-            <li>Risk of bias assessment (RoB 2, ROBINS-I, etc.)</li>
-            <li>Effect size calculation</li>
-            <li>Meta-analysis with forest plots</li>
-            <li>Publication bias detection</li>
-            <li>GRADE certainty assessment</li>
-            <li>Summary of findings tables</li>
-            <li>Manuscript preparation and reporting</li>
-          </ol>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Standards & Guidelines</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4">
-            MetaMaster360 adheres to internationally recognized standards:
-          </p>
-          <ul className="space-y-2">
-            <li><strong>PRISMA 2020:</strong> Preferred Reporting Items for Systematic Reviews and Meta-Analyses</li>
-            <li><strong>Cochrane Handbook:</strong> Gold standard for systematic review methodology</li>
-            <li><strong>GRADE:</strong> Grading of Recommendations Assessment, Development and Evaluation</li>
-            <li><strong>RoB 2:</strong> Revised Cochrane risk-of-bias tool for randomized trials</li>
-            <li><strong>ROBINS-I:</strong> Risk Of Bias In Non-randomized Studies of Interventions</li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Educational Philosophy</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p>
-            We believe in learning by doing. Each module combines theoretical
-            knowledge with hands-on practice using interactive tools and synthetic
-            datasets.
-          </p>
-          <p>
-            Our approach emphasizes:
-          </p>
-          <ul className="space-y-2 list-disc list-inside">
-            <li>Active learning through interactive exercises</li>
-            <li>Progressive complexity from basics to advanced topics</li>
-            <li>Immediate feedback and guided practice</li>
-            <li>Real-world applicability with methodological rigor</li>
-            <li>Self-paced learning with clear learning objectives</li>
-          </ul>
-        </CardContent>
-      </Card>
+      <Callout kind="tip" title="Found an error or outdated guidance?">Open an issue on the project’s GitHub repository with the source that supports the correction.</Callout>
     </div>
   )
 }

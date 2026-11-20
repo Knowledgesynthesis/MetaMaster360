@@ -1,185 +1,58 @@
 # MetaMaster360
 
-**Complete Systematic Review & Meta-Analysis Workflow Simulator**
+**Learn systematic reviews and meta-analysis by doing one.** Seventeen interactive modules take a single review from question to Summary of findings, each with working labs and a mastery check. The labs double as a toolkit for real reviews.
 
-An interactive, mobile-first educational platform that teaches clinicians and researchers everything they need to know to perform rigorous systematic reviews and meta-analyses—from question formulation to manuscript preparation.
+Content is current to the Cochrane Handbook v6.5, Cochrane's current RevMan random-effects methods (REML, HKSJ, prediction intervals), PRISMA 2020 and its extensions (PRISMA-S, PRISMA-LSR 2024, PRISMA-C 2026), RoB 2, ROBINS-I V2 (draft, Nov 2025), ROB-ME, the Core GRADE series (BMJ 2025), and the 2025 joint position on AI in evidence synthesis. Last reviewed November 2026.
 
-## Features
+## What's inside
 
-### 🎯 Evidence-Based Learning
-- Aligned with **PRISMA 2020**, **Cochrane Handbook**, and **GRADE** guidelines
-- Methodologically rigorous content reviewed by evidence synthesis experts
-- Safe, synthetic datasets—never using real patient data
+| Phase | Modules | Labs |
+|---|---|---|
+| Plan | 1 Question · 2 Protocol & registration | Question builder & critic, review-type selector, PRISMA-P protocol generator (Markdown export) |
+| Find | 3 Search · 4 Records & deduplication · 5 Study selection | Search builder with PubMed/Ovid syntax and linter, deduplication lab, screening simulator, κ calculator, PRISMA 2020 flow builder with arithmetic checks |
+| Extract & appraise | 6 Data extraction · 7 Risk of bias | Extraction exercise with traps (SE vs SD, medians, multi-arm, cluster trials), conversion calculators, RoB 2 domain-1 algorithm, trial appraisal vs expert key, traffic-light plots |
+| Synthesize | 8 Effect measures · 9 Meta-analysis · 10 Heterogeneity · 11 Missing evidence · 12 Synthesis without meta-analysis | Effect-size calculator, OR vs RR explorer, **meta-analysis engine**, weight explorer, I² vs τ² explorer, sensitivity and subgroup credibility, publication-bias simulator, vote counting with sign test |
+| Conclude & report | 13 GRADE · 14 Summary of findings · 15 Reporting | GRADE rater, imprecision assistant (Core GRADE), SoF builder (Markdown/CSV), PRISMA 2020 checklist audit, spin spotter |
+| Go further | 16 Beyond the standard review · 17 Capstone | Indirect comparison (Bucher), AI-use scenarios, 13-decision capstone |
 
-### 📱 Mobile-First Design
-- Fully responsive interface optimized for all devices
-- **Offline-capable PWA** with service worker
-- **Dark mode** for comfortable learning in any environment
-- WCAG 2.2 AA accessible
+There are 122 explained questions in total. A module counts as mastered at ≥ 80% on its check. The mastery exam draws 30 questions across all modules, and questions you miss go into a review queue.
 
-### 🧮 Interactive Tools
-- **PICO Builder**: Formulate focused research questions
-- **Search Strategy Composer**: Build Boolean queries with MeSH terms
-- **Citation Manager**: Import and deduplicate references
-- **Screening Simulator**: Practice title/abstract and full-text screening
-- **Risk of Bias Tools**: Apply RoB 2, ROBINS-I, QUADAS-2, JBI
-- **Effect Size Calculator**: Calculate MD, SMD, RR, OR, HR
-- **Meta-Analysis Engine**: Create forest plots with heterogeneity assessment
-- **Funnel Plots**: Detect publication bias
-- **GRADE Dashboard**: Rate certainty of evidence
-- **SoF Table Generator**: Create publication-ready summaries
+## Statistics engine
 
-## Learning Modules
+The engine (`src/lib/stats`) handles:
 
-1. **Framing the Research Question** - PICO/PEO frameworks
-2. **Protocol Writing & Registration** - PROSPERO registration
-3. **Search Strategy Development** - Boolean logic and database searching
-4. **Citation Management** - Import, organize, deduplicate
-5. **Screening Workflow** - Title/abstract and full-text screening
-6. **Data Extraction** - Build extraction tables
-7. **Risk of Bias Assessment** - Apply critical appraisal tools
-8. **Effect Size Calculation** - Compute standardized measures
-9. **Meta-Analysis Engine** - Fixed and random-effects models
-10. **Publication Bias Detection** - Funnel plots and small-study effects
-11. **GRADE Assessment** - Certainty of evidence rating
-12. **Summary of Findings** - Create SoF tables
-13. **Manuscript Preparation** - PRISMA reporting
-14. **Integrated SR/MA Sandbox** - Complete workflow practice
+- **Effect sizes:** MD, Hedges' g, RR, OR, RD, NNT, and estimate + SE from a CI or p-value.
+- **Conversions:** SE/CI/t → SD, median/IQR → mean/SD (Luo 2018; Wan 2014), combining groups, change-score SD, design effect.
+- **Pooling:** common-effect inverse variance and random-effects models with REML or DerSimonian–Laird τ², Wald or HKSJ intervals, prediction interval, Q-profile CI for τ², I², subgroup tests and leave-one-out.
+- **Bias and agreement:** Egger's test, sign test, Wilson interval, κ, and optimal information size.
 
-## Tech Stack
+The tests reproduce the published `metafor` results for the BCG vaccine dataset: REML τ² = 0.3132, pooled log RR = −0.7145, I² = 92.2%, τ² CI 0.120–1.111. They also cross-check every distribution function against SciPy. Content-integrity tests fail the build if a number quoted in the lessons stops matching what the engine computes.
 
-- **Frontend**: React 18 + TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **Routing**: React Router v6
-- **State Management**: Zustand with localStorage persistence
-- **Data Storage**: IndexedDB for offline capability
-- **Visualization**: Recharts for forest and funnel plots
-- **PWA**: Vite PWA plugin with Workbox
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+ and npm
-
-### Installation
+## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
+npm run dev        # http://localhost:5173
+npm test           # 58 unit + content-integrity tests
+npm run lint
+npm run build      # type-check + production build (PWA, offline-capable)
 ```
 
-### Development
-
-The app will be available at `http://localhost:5173`
-
-### Production Build
-
-The production build is optimized and includes:
-- Code splitting and tree shaking
-- Service worker for offline functionality
-- Compressed assets (gzip)
-- PWA manifest for installability
-
-## Project Structure
+Stack: React 19, React Router 7, Vite 8, Tailwind CSS 4, TypeScript 6, Zustand 5, Vitest 5, and vite-plugin-pwa. Plots are hand-written SVG, and no data leaves the browser: progress is kept in local storage and can be exported or imported from **About & settings**.
 
 ```
-MetaMaster360/
-├── src/
-│   ├── components/
-│   │   ├── layout/          # Header, Sidebar, Layout
-│   │   ├── ui/              # Reusable UI components
-│   │   └── modules/         # Module-specific components
-│   ├── pages/
-│   │   ├── modules/         # Learning module pages
-│   │   ├── Home.tsx
-│   │   ├── Glossary.tsx
-│   │   ├── Assessment.tsx
-│   │   └── About.tsx
-│   ├── data/
-│   │   ├── modules.ts       # Module metadata
-│   │   ├── citations.ts     # Synthetic citations
-│   │   └── glossary.ts      # Term definitions
-│   ├── lib/
-│   │   ├── db.ts            # IndexedDB utilities
-│   │   └── utils.ts         # Helper functions
-│   ├── stores/
-│   │   └── appStore.ts      # Zustand state management
-│   ├── types/
-│   │   └── index.ts         # TypeScript definitions
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── index.css
-├── public/
-├── index.html
-├── vite.config.ts
-├── tailwind.config.js
-├── tsconfig.json
-└── package.json
+src/
+  lib/stats/         statistics engine + tests
+  content/           module registry, quiz bank, glossary, references, running case, datasets
+  modules/           one lesson per module (lazy-loaded)
+  labs/              interactive tools (shared by modules and the Toolkit)
+  components/        UI primitives, layout, learning components, plots
+  pages/             Home, ModulePage, Toolkit, Exam, Glossary, Sources, About
+docs/                original specification documents
 ```
-
-## Key Features in Detail
-
-### Progress Tracking
-- Automatically saves module completion status
-- Visual progress indicators on home page
-- Prerequisites enforced for sequential learning
-
-### Offline Functionality
-- Service worker caches all assets
-- IndexedDB stores user progress and work
-- Full functionality available without internet
-
-### Accessibility
-- Keyboard navigation support
-- Screen reader compatible
-- ARIA labels and semantic HTML
-- Color contrast meets WCAG 2.2 AA standards
-
-### Educational Philosophy
-- Active learning through interactive exercises
-- Progressive complexity from basics to advanced
-- Immediate feedback and guided practice
-- Real-world applicability with methodological rigor
-
-## Educational Standards
-
-MetaMaster360 adheres to:
-- **PRISMA 2020**: Systematic review reporting guidelines
-- **Cochrane Handbook**: Gold standard SR methodology
-- **GRADE**: Certainty of evidence assessment
-- **RoB 2**: Risk of bias in randomized trials
-- **ROBINS-I**: Risk of bias in non-randomized studies
 
 ## Contributing
 
-This is an educational platform. Contributions should maintain:
-- Methodological accuracy per international standards
-- Use of synthetic data only
-- Accessibility compliance
-- Clear learning objectives
+Corrections need a source. Every factual statement should trace to an entry in `src/content/references.ts` (all DOIs are checked against Crossref). When you change the running-case data, run `npm test`: the content tests will name every lesson sentence whose numbers no longer match.
 
-## License
-
-Educational use only. All content aligned with published systematic review standards.
-
-## Acknowledgments
-
-Built according to specifications in `plan.md` and `ultrathink.md`, emphasizing:
-- Evidence-based methodology
-- Interactive, hands-on learning
-- Mobile-first, accessible design
-- Complete workflow coverage from PICO to publication
-
----
-
-**MetaMaster360** - Master systematic reviews and meta-analyses through interactive, evidence-based learning.
+The running case uses synthetic studies. The BCG dataset is real (Colditz et al., 1994).
